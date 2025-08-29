@@ -15,12 +15,13 @@ class GameWindow:
     def show_instructions(self,frame):
         self.reset_window()
         instructions = [
-                "ZASADY GRY:",
-                "- Steruj platforma przechylajac glowe",
-                "- Im mocniej przechylisz, tym szybciej sie porusza",
-                "- Gra konczy sie, gdy pilka spadnie, lub skoncza sie klocki",
-                "- Pauza: podniesienie reki",
-                "- START: pokaz 2 dlonie do kamery"
+                "CONTROLS",
+                "START GAME: Show two hands",
+                "MOVE: Tilt your head to move the platform",
+                "PAUSE GAME: Show one hand",
+                "EXIT GAME: ESC",
+                "",
+                "GOAL: Break all bricks, without dropping the ball"
             ]
         for i, line in enumerate(instructions):
             cv2.putText(self.window, line, (60, 100 + i * 40),
@@ -35,13 +36,14 @@ class GameWindow:
             cv2.putText(self.window, f"{i}", (self.main_width // 2 - 30, self.main_height // 2),
                         cv2.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 5)
             cv2.imshow("BRICK BREAKER GAME", self.window)
-            cv2.waitKey(1000)
+            cv2.waitKey(750)
 
         # print START
         self.window = np.ones((self.main_height, self.main_width, 3), dtype=np.uint8) * 30
         cv2.putText(self.window, "START!", (self.main_width // 2 - 100, self.main_height // 2),
                     cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 4)
         cv2.imshow("BRICK BREAKER GAME", self.window)
+        cv2.waitKey(750)
 
     def print_game(self, game, frame):
             # main game window
@@ -54,6 +56,8 @@ class GameWindow:
                         (int(game.platform_pos + game.platform_width), self.main_height - 10),
                         (0, 255, 0), -1)
             
+            # cam
+            frame = cv2.flip(frame, 1)
             cam_small = cv2.resize(frame, self.camera_frame_size)
             cam_h, cam_w = cam_small.shape[:2]
             self.window[10:10 + cam_h, self.platform_area_width + 10:self.platform_area_width + 10 + cam_w] = cam_small
@@ -61,14 +65,14 @@ class GameWindow:
             # game objects
             self.draw_game_objects(game)
 
-            # Pozycja pod kamerą
+            # score print
             score_x = self.platform_area_width + 10
             score_y = 10 + cam_h + 30
             score = "GAME SCORE: " + str(game.score)
-
             cv2.putText(self.window, score, (score_x, score_y),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
 
+            #pause
             if game.paused:
                 cv2.putText(self.window, "PAUSE", (self.main_width -230, self.main_height-50),
                         cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 4)
@@ -95,15 +99,15 @@ class GameWindow:
         final_score = game.score
         message = ""
         if game.is_victory():
-            message = f"WYGRALES! Wynik: {final_score} | Czas: {duration:.1f}s"
+            message = f"U WIN!!! Score: {final_score} | Time: {duration:.1f}s"
         else:
-            message = f"KONIEC GRY. Wynik: {final_score} | Czas: {duration:.1f}s"
+            message = f"GAME OVER. Score: {final_score} | Time: {duration:.1f}s"
 
         cv2.putText(self.window, message, (50, self.main_height // 2 - 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 255), 2)
-        cv2.putText(self.window, "Pokaz 2 dlonie do kamery aby zagrac ponownie", (50, self.main_height // 2 + 20),
+        cv2.putText(self.window, "Show both hand to restart", (50, self.main_height // 2 + 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
-        cv2.putText(self.window, "lub ESC aby zakonczyc", (50, self.main_height // 2 + 60),
+        cv2.putText(self.window, "Press ESC to exit game", (50, self.main_height // 2 + 60),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
         
         cam_small = cv2.resize(frame, self.camera_frame_size)
