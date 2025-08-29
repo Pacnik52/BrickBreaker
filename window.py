@@ -1,13 +1,9 @@
 import cv2
 import mediapipe as mp
 import numpy as np
-from camera_utils import calculate_head_tilt_angle, is_mouth_open, is_hand_open
 
 class GameWindow:
     def __init__(self):
-        # platfrm parameters
-
-
         # game window parameters
         self.main_height = 480
         self.platform_area_width = 720  # platform moving area
@@ -61,26 +57,10 @@ class GameWindow:
                         (0, 255, 0), -1)
 
             # camera print
-            cam_small = cv2.resize(self.window, self.camera_frame_size)
-            cam_h, cam_w = cam_small.shape[:2]
-
-            # # text print
-            # cam_text = f"{direction.upper()}, {int(abs(game.angle))}"
-            # if game.paused:
-            #     cam_text += "  |  PAUZA"
-
-            # position
-            # text_x = self.platform_area_width + 10
-            # text_y = 10 + cam_h + 30
-
-            # cv2.putText(self.window, cam_text, (text_x, text_y),
-            #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
-
-            # cam_h, cam_w = cam_small.shape[:2]
-            # frame[10:10 + cam_h, self.platform_area_width + 10:self.platform_area_width + 10 + cam_w] = cam_small
-            # cam_small = cv2.resize(frame, cam_small.shape[:2])
-            # self.window[10:190, self.main_width - 250:self.main_width - 10] = cam_small
+            # cam_small = cv2.resize(self.window, self.camera_frame_size)
+            
             cam_small = cv2.resize(frame, self.camera_frame_size)
+            cam_h, cam_w = cam_small.shape[:2]
             self.window[10:10 + cam_h, self.platform_area_width + 10:self.platform_area_width + 10 + cam_w] = cam_small
 
             # game objects
@@ -109,32 +89,29 @@ class GameWindow:
         cv2.putText(self.window, f'Score: {game.score}', (10, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
-    def print_game_over(self, game):
+    def print_game_over(self, game, frame):
+        self.reset_window()
+
+        duration = game.get_duration()
+        final_score = game.score
+        message = ""
         if game.is_victory():
-            message = f"WYGRALES! Wynik: {game.score} | Czas: {game.get_duration():.1f}s"
+            message = f"WYGRALES! Wynik: {final_score} | Czas: {duration:.1f}s"
         else:
-            message = f"KONIEC GRY. Wynik: {game.score} | Czas: {game.get_duration():.1f}s"
+            message = f"KONIEC GRY. Wynik: {final_score} | Czas: {duration:.1f}s"
 
-        cv2.putText(self.window, message, (50, 240),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 255), 3)
-        while True:
-            self.reset_window()
-            duration = game.get_duration()
-            final_score = game.score
-            summary = f'KONIEC GRY! Punkty: {final_score}, Czas: {duration:.1f} s'
-            cv2.putText(self.window, summary, (50, self.main_height // 2 - 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
-            cv2.putText(self.window, "Nacisnij R aby zagrac ponownie", (50, self.main_height // 2 + 20),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
-            cv2.putText(self.window, "lub Q aby zakonczyc", (50, self.main_height // 2 + 60),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+        cv2.putText(self.window, message, (50, self.main_height // 2 - 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 255), 2)
+        cv2.putText(self.window, "Pokaz 2 dlonie do kamery aby zagrac ponownie", (50, self.main_height // 2 + 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+        cv2.putText(self.window, "lub ESC aby zakonczyc", (50, self.main_height // 2 + 60),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+        
+        cam_small = cv2.resize(frame, self.camera_frame_size)
+        cam_h, cam_w = cam_small.shape[:2]
+        self.window[10:10 + cam_h, self.platform_area_width + 10:self.platform_area_width + 10 + cam_w] = cam_small
 
-            cv2.imshow("BRICK BREAKER GAME", self.window)
-            key = cv2.waitKey(0) & 0xFF
-            if key == ord('q'):
-                return False
-            elif key == ord('r'):
-                return True
+        cv2.imshow("BRICK BREAKER GAME", self.window)
     
     def reset_window(self):
         self.window = np.ones((self.main_height, self.main_width, 3), dtype=np.uint8) * 30

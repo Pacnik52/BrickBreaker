@@ -10,26 +10,7 @@ def calculate_head_tilt_angle(landmarks, image_width, image_height):
     delta_y = y2 - y1
     delta_x = x2 - x1
     angle_rad = math.atan2(delta_y, delta_x)
-    return math.degrees(angle_rad)
-
-# mouth opening
-def is_mouth_open(landmarks, image_width, image_height, MOUTH_OPEN_THRESHOLD):
-    top_lip = landmarks[13]
-    bottom_lip = landmarks[14]
-    left_lip = landmarks[78]
-    right_lip = landmarks[308]
-
-    top = np.array([top_lip.x * image_width, top_lip.y * image_height])
-    bottom = np.array([bottom_lip.x * image_width, bottom_lip.y * image_height])
-    left = np.array([left_lip.x * image_width, left_lip.y * image_height])
-    right = np.array([right_lip.x * image_width, right_lip.y * image_height])
-
-    # mouth opening sizes up to bottom and left to right
-    vertical = np.linalg.norm(top - bottom)
-    horizontal = np.linalg.norm(left - right)
-    # MAR
-    mar = vertical / horizontal if horizontal != 0 else 0
-    return mar > MOUTH_OPEN_THRESHOLD  
+    return math.degrees(angle_rad)  
 
 # hand gestures 
 def is_hand_open(hand_landmarks):
@@ -40,4 +21,24 @@ def is_hand_open(hand_landmarks):
         lm[16].y < lm[14].y, # ring finger
         lm[20].y < lm[18].y  # pinky
     ]
-    return sum(open_fingers) >= 3 # min3 open
+    return sum(open_fingers) >= 4 # min4 open
+    
+def both_hands(hand_results):
+    if hand_results.multi_hand_landmarks:
+        for hand_landmarks in hand_results.multi_hand_landmarks:
+            open_hands = 0
+            for hand_landmarks in hand_results.multi_hand_landmarks:
+                if is_hand_open(hand_landmarks):
+                    open_hands += 1
+            if open_hands >= 2:
+                return True
+    return False
+            
+def one_hand(hand_results):
+    if hand_results.multi_hand_landmarks:
+        for hand_landmarks in hand_results.multi_hand_landmarks:
+            if is_hand_open(hand_landmarks):
+                # print("t")
+                return True
+    # print("f")
+    return False

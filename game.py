@@ -4,7 +4,6 @@ import cv2
 import time
 import random
 from window import GameWindow
-from camera_utils import calculate_head_tilt_angle, is_mouth_open, is_hand_open
 
 class Ball:
     def __init__(self):
@@ -48,7 +47,6 @@ class Game:
         # game parameters
         self.pause_start = False
         self.paused = False
-        self.mouth_detection_enabled = True
 
         # mediaPipe setup
         self.mp_face_mesh = mp.solutions.face_mesh
@@ -70,8 +68,8 @@ class Game:
         left_eye_px = (int(left_eye.x * image_width), int(left_eye.y * image_height))
         right_eye_px = (int(right_eye.x * image_width), int(right_eye.y * image_height))
 
-        # cv2.circle(frame, left_eye_px, 4, (0, 255, 0), -1)
-        # cv2.circle(frame, right_eye_px, 4, (0, 255, 0), -1)
+        cv2.circle(frame, left_eye_px, 4, (0, 255, 0), -1)
+        cv2.circle(frame, right_eye_px, 4, (0, 255, 0), -1)
 
         dx = right_eye_px[0] - left_eye_px[0]
         dy = right_eye_px[1] - left_eye_px[1]
@@ -155,8 +153,8 @@ class Game:
     def countdown(self):
         self.main_window.countdown()
 
-    def show_game_over(self):
-        return self.main_window.print_game_over(self)
+    def show_game_over(self, frame):
+        return self.main_window.print_game_over(self, frame)
 
     def is_game_over(self):
         return self.game_over
