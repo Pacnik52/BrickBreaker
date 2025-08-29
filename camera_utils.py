@@ -38,7 +38,5 @@ def one_hand(hand_results):
     if hand_results.multi_hand_landmarks:
         for hand_landmarks in hand_results.multi_hand_landmarks:
             if is_hand_open(hand_landmarks):
-                # print("t")
                 return True
-    # print("f")
     return False

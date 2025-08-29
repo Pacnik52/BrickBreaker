@@ -57,7 +57,7 @@ class Game:
 
         # visual game object initializtion
         self.ball = Ball()
-        self.rectangles = [Rectangle(10 + i * 60, 55 * j ) for i in range(self.block_column_number) for j in range(1,self.block_row_number)]
+        self.rectangles = [Rectangle(10 + i * 60, 10 + (55 * (j-1)) ) for i in range(self.block_column_number) for j in range(1,self.block_row_number)]
 
         self.main_window = GameWindow()
 
@@ -109,9 +109,16 @@ class Game:
         self.ball.y += self.ball.dy
 
         # collisions - ball and border
-        if self.ball.x - self.ball.radius <= 0 or self.ball.x + self.ball.radius >= 720:
+        if self.ball.x - self.ball.radius <= 0:
+            self.ball.x = self.ball.radius
             self.ball.dx = -self.ball.dx
+
+        if self.ball.x + self.ball.radius >= 720:
+            self.ball.x = 720 - self.ball.radius
+            self.ball.dx = -self.ball.dx
+
         if self.ball.y - self.ball.radius <= 0:
+            self.ball.y = self.ball.radius
             self.ball.dy = -self.ball.dy
 
         # collisions - self.ball and diezone
@@ -172,7 +179,7 @@ class Game:
 
     def reset_game(self):
         self.ball = Ball()
-        self.rectangles = [Rectangle(10 + i * 60, 55 * j ) for i in range(self.block_column_number) for j in range(1,self.block_row_number)]
+        self.rectangles = [Rectangle(10 + i * 60, 10 + (55 * (j - 1)) ) for i in range(self.block_column_number) for j in range(1,self.block_row_number)]
         self.score = 0
         self.game_over = False
         self.game_started = False

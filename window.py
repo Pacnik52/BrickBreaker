@@ -18,8 +18,8 @@ class GameWindow:
                 "ZASADY GRY:",
                 "- Steruj platforma przechylajac glowe",
                 "- Im mocniej przechylisz, tym szybciej sie porusza",
-                "- Gra konczy sie, gdy pilka spadnie",
-                "- Pauza: otwarcie ust",
+                "- Gra konczy sie, gdy pilka spadnie, lub skoncza sie klocki",
+                "- Pauza: podniesienie reki",
                 "- START: pokaz 2 dlonie do kamery"
             ]
         for i, line in enumerate(instructions):
@@ -42,8 +42,6 @@ class GameWindow:
         cv2.putText(self.window, "START!", (self.main_width // 2 - 100, self.main_height // 2),
                     cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 4)
         cv2.imshow("BRICK BREAKER GAME", self.window)
-        # cv2.waitKey(1000)
-        # cv2.imshow("BRICK BREAKER GAME", self.window)
 
     def print_game(self, game, frame):
             # main game window
@@ -55,9 +53,6 @@ class GameWindow:
                         (int(game.platform_pos), self.main_height - game.platform_height - 10),
                         (int(game.platform_pos + game.platform_width), self.main_height - 10),
                         (0, 255, 0), -1)
-
-            # camera print
-            # cam_small = cv2.resize(self.window, self.camera_frame_size)
             
             cam_small = cv2.resize(frame, self.camera_frame_size)
             cam_h, cam_w = cam_small.shape[:2]
@@ -66,9 +61,17 @@ class GameWindow:
             # game objects
             self.draw_game_objects(game)
 
+            # Pozycja pod kamerą
+            score_x = self.platform_area_width + 10
+            score_y = 10 + cam_h + 30
+            score = "GAME SCORE: " + str(game.score)
+
+            cv2.putText(self.window, score, (score_x, score_y),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+
             if game.paused:
-                cv2.putText(cam_small, "PAUZA", (50, 250),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 200, 255), 2)
+                cv2.putText(self.window, "PAUSE", (self.main_width -230, self.main_height-50),
+                        cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 4)
 
             # show
             cv2.imshow("BRICK BREAKER GAME", self.window)
@@ -84,10 +87,6 @@ class GameWindow:
                             (int(rect.x), int(rect.y)),
                             (int(rect.x + rect.width), int(rect.y + rect.height)),
                             rect.color, -1)
-
-        # draw score
-        cv2.putText(self.window, f'Score: {game.score}', (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     def print_game_over(self, game, frame):
         self.reset_window()
