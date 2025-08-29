@@ -46,9 +46,9 @@ class Game:
         self.platform_height = 20
 
         # game parameters
+        self.pause_start = False
         self.paused = False
-        self.MOUTH_OPEN_THRESHOLD = 0.35
-        self.mouth_detection_enabled = False
+        self.mouth_detection_enabled = True
 
         # mediaPipe setup
         self.mp_face_mesh = mp.solutions.face_mesh
@@ -63,93 +63,45 @@ class Game:
 
         self.main_window = GameWindow()
 
-    def show_instructions_until_thumb(self, cap):
-        while True:
+    def draw_landmarks(self, frame, landmarks, image_width, image_height):
+        left_eye = landmarks.landmark[33]
+        right_eye = landmarks.landmark[263]
 
-            success, frame = cap.read()
-            if not success:
-                continue
+        left_eye_px = (int(left_eye.x * image_width), int(left_eye.y * image_height))
+        right_eye_px = (int(right_eye.x * image_width), int(right_eye.y * image_height))
 
-            self.main_window.show_instructions(frame)
+        # cv2.circle(frame, left_eye_px, 4, (0, 255, 0), -1)
+        # cv2.circle(frame, right_eye_px, 4, (0, 255, 0), -1)
 
-            frame = cv2.flip(frame, 1)
-            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        dx = right_eye_px[0] - left_eye_px[0]
+        dy = right_eye_px[1] - left_eye_px[1]
 
-            results = self.hands.process(rgb)
-            if results.multi_hand_landmarks:
-                for hand_landmarks in results.multi_hand_landmarks:
-                    open_hands = 0
-                    for hand_landmarks in results.multi_hand_landmarks:
-                        if is_hand_open(hand_landmarks):
-                            open_hands += 1
-                    if open_hands >= 2:
-                        # cv2.putText(self.window, "START", (60, 360),
-                        #             cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
-                        # cv2.imshow("BRICK BREAKER GAME", self.window)
-                        # cv2.waitKey(1000)
-                        self.main_window.countdown()
-                        return  
-            # else:
-            #     cv2.putText(self.window, "POKAZ OBIE DLONIE ABY ROZPOCZAC", (60, 360),
-            #                 cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 200, 255), 2)
-                
-            # cv2.imshow("BRICK BREAKER GAME", self.window)
-            self.main_window.show_instructions(frame)
-            if cv2.waitKey(1) & 0xFF == 27:
-                cv2.destroyAllWindows()
-                exit()
+        length = (dx**2 + dy**2) ** 0.5
+        if length == 0:
+            length = 1
+        dx /= length
+        dy /= length
 
-    def frame_to_game_move(self, frame):
-        image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = self.face_mesh.process(image_rgb)
-        image_height, image_width, _ = frame.shape
+        extend = 10000
+        pt1 = (int(left_eye_px[0] - dx * extend), int(left_eye_px[1] - dy * extend))
+        pt2 = (int(right_eye_px[0] + dx * extend), int(right_eye_px[1] + dy * extend))
 
-        angle = 0
-        direction = "prosto"
+        cv2.line(frame, pt1, pt2, (0, 255, 0), 5)
+    
+    def update_platform(self, angle):
+        direction = "L" if angle < -3 else "R" if angle > 3 else "S"
 
-        if results.multi_face_landmarks is not None:
-            players_landmarks = None
-            min_distance = 100000
-            for face_landmarks in results.multi_face_landmarks:
-                dist_from_center = abs((face_landmarks.landmark[33].x + face_landmarks.landmark[263].x) / 2 - 0.5)
-                if dist_from_center < min_distance:
-                    players_landmarks = face_landmarks
-                    min_distance = dist_from_center
-
-            self.mp_drawing.draw_landmarks(frame, players_landmarks, self.mp_face_mesh.FACEMESH_CONTOURS,
-                                    landmark_drawing_spec=self.mp_drawing.DrawingSpec(color=(0, 0, 255)))
-            angle = calculate_head_tilt_angle(players_landmarks.landmark, image_width, image_height)
-            if self.mouth_detection_enabled and is_mouth_open(players_landmarks.landmark, image_width, image_height):
-                if not self.paused:
-                    self.paused = True
-                    print("PAUZA")
-            else:
-                if self.mouth_detection_enabled and self.paused:
-                    self.paused = False
-                    print("WZNOWIENIE GRY")
-
-
-            direction = "lewo" if angle < -3 else "prawo" if angle > 3 else "prosto"
-            angle_display = int(abs(angle))
-            print(f"Przechylenie: {direction}, Kąt: {angle_display}°")
-
-            # platform movement
-            if direction == "prawo":
-                platform_speed = max(10, abs(angle))
-            elif direction == "lewo":
-                platform_speed = -max(10, abs(angle))
-            else:
-                platform_speed = 0
-
-            self.platform_pos += platform_speed / 1.2
-            self.platform_pos = max(0, min(self.main_window.platform_area_width - self.platform_width, self.platform_pos))
-
-            if not self.paused:
-                self.update_ball()
-        self.main_window.print_game(self, frame)
+        # platform movement
+        if direction == "R":
+            platform_speed = max(10, abs(angle))
+        elif direction == "L":
+            platform_speed = -max(10, abs(angle))
+        else:
+            platform_speed = 0
+        self.platform_pos += platform_speed / 1.2
+        self.platform_pos = max(0, min(self.main_window.platform_area_width - self.platform_width, self.platform_pos))
 
     def update_ball(self):
-        # global score, game_over, game_started, start_time, end_time
 
         if not self.game_started:
             self.game_started = True
@@ -174,6 +126,9 @@ class Game:
         if (460 >= self.ball.y + self.ball.radius >= 450 and
                 self.platform_pos <= self.ball.x <= self.platform_pos + self.platform_width):
             self.ball.dy = -abs(self.ball.dy)
+            hit_pos = ((self.ball.x - self.platform_pos) / self.platform_width) * 2 - 1
+            self.ball.dx = hit_pos * 5
+
 
         # collisions - self.ball and bricks
         for rect in self.rectangles:
@@ -196,6 +151,12 @@ class Game:
         if all(not r.active for r in self.rectangles):
             self.end_time = time.time()
             self.game_over = True
+    
+    def countdown(self):
+        self.main_window.countdown()
+
+    def show_game_over(self):
+        return self.main_window.print_game_over(self)
 
     def is_game_over(self):
         return self.game_over
@@ -212,7 +173,6 @@ class Game:
         return 0
 
     def reset_game(self):
-        # global self.ball, rectangles, score, game_over, game_started, start_time, end_time
         self.ball = Ball()
         self.rectangles = [Rectangle(10 + i * 60, 55 * j ) for i in range(self.block_column_number) for j in range(1,self.block_row_number)]
         self.score = 0
@@ -220,6 +180,7 @@ class Game:
         self.game_started = False
         self.start_time = None
         self.end_time = None
+        self.platform_pos = 320
 
     def is_victory(self):
         return all(not r.active for r in self.rectangles)

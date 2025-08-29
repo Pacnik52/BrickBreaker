@@ -132,15 +132,9 @@ class GameWindow:
             cv2.imshow("BRICK BREAKER GAME", self.window)
             key = cv2.waitKey(0) & 0xFF
             if key == ord('q'):
-                # cap.release()
-                cv2.destroyAllWindows()
-                exit()
+                return False
             elif key == ord('r'):
-                # from game import reset_game
-                game.reset_game()
-                self.countdown()
-                platform_pos = 320
-                break 
+                return True
     
     def reset_window(self):
         self.window = np.ones((self.main_height, self.main_width, 3), dtype=np.uint8) * 30

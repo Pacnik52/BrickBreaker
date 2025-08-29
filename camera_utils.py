@@ -27,7 +27,7 @@ def is_mouth_open(landmarks, image_width, image_height, MOUTH_OPEN_THRESHOLD):
     # mouth opening sizes up to bottom and left to right
     vertical = np.linalg.norm(top - bottom)
     horizontal = np.linalg.norm(left - right)
-    # mar
+    # MAR
     mar = vertical / horizontal if horizontal != 0 else 0
     return mar > MOUTH_OPEN_THRESHOLD  
 
