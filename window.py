@@ -9,6 +9,7 @@ class GameWindow:
         self.platform_area_width = 720  # platform moving area
         self.camera_frame_size = (240, 180)  # camera output frame size
         self.main_width = self.platform_area_width + self.camera_frame_size[0] + 20  # 720 + 240 + 20 = 980
+        self.background = cv2.resize(cv2.imread("space_background.jpg"),(720,480))
 
         self.window = np.ones((self.main_height, self.main_width, 3), dtype=np.uint8) * 30
 
@@ -48,7 +49,10 @@ class GameWindow:
     def print_game(self, game, frame):
             # main game window
             self.window = np.ones((self.main_height, self.main_width, 3), dtype=np.uint8) * 30
+            game_background = self.background.copy()
+            self.window[0:self.main_height, 0:self.platform_area_width] = game_background
             cv2.rectangle(self.window, (0, 0), (self.platform_area_width - 1, self.main_height - 1), (255, 255, 255), 2)
+            
 
             # platform print
             cv2.rectangle(self.window,
@@ -82,7 +86,7 @@ class GameWindow:
 
     def draw_game_objects(self, game):
         # draw ball
-        cv2.circle(self.window, (int(game.ball.x), int(game.ball.y)), game.ball.radius, (255, 255, 0), -1)
+        cv2.circle(self.window, (int(game.ball.x), int(game.ball.y)), game.ball.radius, (255, 255, 255), -1)
 
         # draw bricks
         for rect in game.rectangles:
@@ -105,7 +109,7 @@ class GameWindow:
 
         cv2.putText(self.window, message, (50, self.main_height // 2 - 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 255), 2)
-        cv2.putText(self.window, "Show both hand to restart", (50, self.main_height // 2 + 20),
+        cv2.putText(self.window, "Show both hands to restart", (50, self.main_height // 2 + 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
         cv2.putText(self.window, "Press ESC to exit game", (50, self.main_height // 2 + 60),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)

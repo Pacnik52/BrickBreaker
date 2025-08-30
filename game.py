@@ -7,7 +7,7 @@ from window import GameWindow
 
 class Ball:
     def __init__(self):
-        self.radius = 10
+        self.radius = 15
         self.x = 360
         self.y = 400
         self.dx = 5
@@ -26,7 +26,7 @@ class Rectangle:
             (0, 0, 255),     # blue
             (255, 255, 0),   # yellow
             (255, 0, 255),   # purple
-            (0, 255, 255)    # turquoise 
+            (0, 255, 255)    # turquoise
         ])
 
 class Game:
@@ -41,7 +41,7 @@ class Game:
 
         self.platform_pos = 320
         self.platform_speed = 0
-        self.platform_width = 80
+        self.platform_width = 120
         self.platform_height = 20
 
         # game parameters
@@ -58,7 +58,6 @@ class Game:
         # visual game object initializtion
         self.ball = Ball()
         self.rectangles = [Rectangle(10 + i * 60, 10 + (55 * (j-1)) ) for i in range(self.block_column_number) for j in range(1,self.block_row_number)]
-
         self.main_window = GameWindow()
 
     def draw_landmarks(self, frame, landmarks, image_width, image_height):
