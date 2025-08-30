@@ -3,6 +3,7 @@ import mediapipe as mp
 import cv2
 import time
 import random
+import math
 from window import GameWindow
 
 class Ball:
@@ -10,6 +11,7 @@ class Ball:
         self.radius = 15
         self.x = 360
         self.y = 400
+        self.speed = 7
         self.dx = 5
         self.dy = -5
 
@@ -99,7 +101,6 @@ class Game:
         self.platform_pos = max(0, min(self.main_window.platform_area_width - self.platform_width, self.platform_pos))
 
     def update_ball(self):
-
         if not self.game_started:
             self.game_started = True
             self.start_time = time.time()
@@ -111,30 +112,33 @@ class Game:
         if self.ball.x - self.ball.radius <= 0:
             self.ball.x = self.ball.radius
             self.ball.dx = -self.ball.dx
+            self.set_ball_speed()
 
         if self.ball.x + self.ball.radius >= 720:
             self.ball.x = 720 - self.ball.radius
             self.ball.dx = -self.ball.dx
+            self.set_ball_speed()
 
         if self.ball.y - self.ball.radius <= 0:
             self.ball.y = self.ball.radius
             self.ball.dy = -self.ball.dy
+            self.set_ball_speed()
 
-        # collisions - self.ball and diezone
+        # collisions - ball and diezone
         if self.ball.y + self.ball.radius >= 500:
             self.end_time = time.time()
             self.game_over = True
             return
 
-        # collisions - self.ball and platform
+        # collisions - ball and platform
         if (460 >= self.ball.y + self.ball.radius >= 450 and
                 self.platform_pos <= self.ball.x <= self.platform_pos + self.platform_width):
             self.ball.dy = -abs(self.ball.dy)
             hit_pos = ((self.ball.x - self.platform_pos) / self.platform_width) * 2 - 1
-            self.ball.dx = hit_pos * 5
+            self.ball.dx = hit_pos * self.ball.speed
+            self.set_ball_speed()
 
-
-        # collisions - self.ball and bricks
+        # collisions - ball and bricks
         for rect in self.rectangles:
             if rect.active:
                 if (rect.x - self.ball.radius <= self.ball.x <= rect.x + rect.width + self.ball.radius and
@@ -149,13 +153,21 @@ class Game:
                     if min_collision == y_collision:
                         self.ball.dy = -self.ball.dy
 
+                    self.set_ball_speed()
                     rect.active = False
                     self.score += 10
 
         if all(not r.active for r in self.rectangles):
             self.end_time = time.time()
             self.game_over = True
-    
+
+    def set_ball_speed(self):
+        length = math.sqrt(self.ball.dx**2 + self.ball.dy**2)
+        if length == 0:
+            return
+        self.ball.dx = (self.ball.dx / length) * self.ball.speed
+        self.ball.dy = (self.ball.dy / length) * self.ball.speed
+
     def countdown(self):
         self.main_window.countdown()
 
